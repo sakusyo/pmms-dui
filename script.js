@@ -281,6 +281,52 @@ function initPlayer(id, handle, options) {
 				    } catch (e) {
 				        console.log('Twitch force-play failed: ' + e);
 				    }
+				
+				    /*
+				     * Twitch may show a click-to-play overlay instead of
+				     * actually starting playback. Repeatedly look for the
+				     * overlay/play button and click it until playback
+				     * actually starts.
+				     */
+				    let twitchClickAttempts = 0;
+				
+				    let twitchClickInterval = setInterval(() => {
+				        twitchClickAttempts++;
+				
+				        try {
+				            if (media.twitchPlayer.isPaused && !media.twitchPlayer.isPaused()) {
+				                clearInterval(twitchClickInterval);
+				                return;
+				            }
+				
+				            let doc = media.twitchPlayer._iframe.contentWindow.document;
+				
+				            let selectors = [
+				                'button[data-a-target="player-play-pause-button"]',
+				                'button[aria-label="Play"]',
+				                'button[aria-label="Play (space/k)"]',
+				                '.tw-button-icon--play',
+				                '[data-a-target="player-overlay-click-handler"]'
+				            ];
+				
+				            for (let sel of selectors) {
+				                let btn = doc.querySelector(sel);
+				
+				                if (btn) {
+				                    btn.click();
+				                    break;
+				                }
+				            }
+				
+				            media.twitchPlayer.play();
+				        } catch (e) {
+				            console.log('Twitch overlay click attempt failed: ' + e);
+				        }
+				
+				        if (twitchClickAttempts >= 20) {
+				            clearInterval(twitchClickInterval);
+				        }
+				    }, 500);
 				} else {
 					media.videoTracks = media.originalNode.videoTracks;
 				}
