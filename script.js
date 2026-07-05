@@ -268,12 +268,19 @@ function initPlayer(id, handle, options) {
 				} else if (media.hlsPlayer) {
 					media.videoTracks = media.hlsPlayer.videoTracks;
 				} else if (media.twitchPlayer) {
-					/* Auto-click Twitch mature content warning button. */
-					let button = media.twitchPlayer._iframe.contentWindow.document.querySelector('button[data-a-target="player-overlay-mature-accept"]');
-
-					if (button) {
-						button.click();
-					}
+				    /* Auto-click Twitch mature content warning button. */
+				    let button = media.twitchPlayer._iframe.contentWindow.document.querySelector('button[data-a-target="player-overlay-mature-accept"]');
+				
+				    if (button) {
+				        button.click();
+				    }
+				
+				    /* Force playback in case Twitch's own autoplay was blocked. */
+				    try {
+				        media.twitchPlayer.play();
+				    } catch (e) {
+				        console.log('Twitch force-play failed: ' + e);
+				    }
 				} else {
 					media.videoTracks = media.originalNode.videoTracks;
 				}
